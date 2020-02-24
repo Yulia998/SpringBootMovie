@@ -1,0 +1,37 @@
+package netcracker.spring.model;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+public class JsonParser {
+    public static Movie jsonParser(String json) {
+        JSONObject jsonObject = new JSONObject(json);
+        String title = jsonObject.getString("Title");
+        int year = Integer.parseInt(jsonObject.getString("Year").substring(0, 4));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.US);
+        LocalDate released = LocalDate.parse(jsonObject.getString("Released"), formatter);
+        String runtime = jsonObject.getString("Runtime");
+        String genre = jsonObject.getString("Genre");
+        String director = jsonObject.getString("Director");
+        String actors = jsonObject.getString("Actors");
+        String plot = jsonObject.getString("Plot");
+        String country = jsonObject.getString("Country");
+        String poster = jsonObject.getString("Poster");
+        String type = jsonObject.getString("Type");
+        JSONArray ratings = jsonObject.getJSONArray("Ratings");
+        List<Rating> ratingsList = new ArrayList<>();
+        Rating rating;
+        for (int i = 0; i < ratings.length(); i++) {
+            rating = new Rating(ratings.getJSONObject(i).getString("Source"),
+                    ratings.getJSONObject(i).getString("Value"));
+            ratingsList.add(rating);
+        }
+        return new Movie(title, year, released, runtime, genre, director, actors, plot, country, poster, type, ratingsList);
+    }
+}
