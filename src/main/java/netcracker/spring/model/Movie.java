@@ -1,12 +1,11 @@
 package netcracker.spring.model;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public class Movie {
     private String title;
     private int year;
-    private LocalDate released;
+    private String released;
     private String runtime;
     private String genre;
     private String director;
@@ -17,7 +16,7 @@ public class Movie {
     private String type;
     private List<Rating> ratings;
 
-    public Movie(String title, int year, LocalDate released, String runtime,
+    public Movie(String title, int year, String released, String runtime,
                  String genre, String director, String actors, String plot,
                  String country, String poster, String type, List<Rating> ratings) {
         this.title = title;
@@ -42,7 +41,7 @@ public class Movie {
         return year;
     }
 
-    public LocalDate getReleased() {
+    public String getReleased() {
         return released;
     }
 

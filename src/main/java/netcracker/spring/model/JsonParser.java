@@ -3,11 +3,8 @@ package netcracker.spring.model;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.log4j.Logger;
 
@@ -23,8 +20,7 @@ public class JsonParser {
         }
         String title = jsonObject.getString("Title");
         int year = Integer.parseInt(jsonObject.getString("Year").substring(0, 4));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.US);
-        LocalDate released = LocalDate.parse(jsonObject.getString("Released"), formatter);
+        String released = jsonObject.getString("Released");
         String runtime = jsonObject.getString("Runtime");
         String genre = jsonObject.getString("Genre");
         String director = jsonObject.getString("Director");

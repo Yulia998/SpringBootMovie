@@ -29,22 +29,6 @@ public class Document {
         this.outputPath = outputPath;
     }
 
-    public File createMovieDoc(Movie movie) throws IOException, InvalidFormatException {
-        try (XWPFDocument document = new XWPFDocument(new FileInputStream((templatePath)))) {
-            XWPFTable table = document.getTables().get(0);
-            fillTable(table, movie);
-            File file = new File(outputPath + movie.getTitle() + ".docx");
-            FileOutputStream out = new FileOutputStream(file);
-            document.write(out);
-            out.flush();
-            out.close();
-            return file;
-        } catch (IOException | InvalidFormatException e) {
-            LOGGER.error(e);
-            throw e;
-        }
-    }
-
     public File createMovieDoc(List<Movie> movies) throws IOException, InvalidFormatException {
         try (XWPFDocument document = new XWPFDocument(new FileInputStream((templatePath)))) {
             List<XWPFParagraph> paragraphs = document.getParagraphs();
@@ -72,13 +56,15 @@ public class Document {
     }
 
     private void fillTable(XWPFTable table, Movie movie) throws IOException, InvalidFormatException {
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Resource> responseEntity = restTemplate.getForEntity(movie.getPoster(), Resource.class);
-        InputStream inputStream = responseEntity.getBody().getInputStream();
-        table.getRow(0).getCell(0).getParagraphs().get(0).removeRun(0);
-        table.getRow(0).getCell(0).getParagraphs().get(0).createRun()
-                .addPicture(inputStream, XWPFDocument.PICTURE_TYPE_JPEG, "",
-                        Units.toEMU(180), Units.toEMU(230));
+        if (!movie.getPoster().equals("N/A")) {
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<Resource> responseEntity = restTemplate.getForEntity(movie.getPoster(), Resource.class);
+            InputStream inputStream = responseEntity.getBody().getInputStream();
+            table.getRow(0).getCell(0).getParagraphs().get(0).removeRun(0);
+            table.getRow(0).getCell(0).getParagraphs().get(0).createRun()
+                    .addPicture(inputStream, XWPFDocument.PICTURE_TYPE_JPEG, "",
+                            Units.toEMU(180), Units.toEMU(230));
+        }
         table.getRow(0).getCell(1).getParagraphs().get(0).getRuns().get(0).setText(movie.getTitle(), 0);
         table.getRow(1).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(String.valueOf(movie.getYear()), 0);
         table.getRow(2).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getCountry(), 0);

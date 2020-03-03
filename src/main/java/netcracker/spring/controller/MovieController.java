@@ -3,10 +3,8 @@ package netcracker.spring.controller;
 import netcracker.spring.model.Document;
 import netcracker.spring.model.Movie;
 import netcracker.spring.service.SiteService;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 public class MovieController {
@@ -28,46 +26,31 @@ public class MovieController {
     }
 
     @RequestMapping(value = "/movie", params = "name")
-    public ResponseEntity<?> getMovieByName(@RequestParam(name = "name") String name,
-                                            @RequestParam(name = "mediaType", defaultValue = "json") String mediaType) throws IOException, InvalidFormatException {
+    public ResponseEntity<?> getMovieByName(@RequestParam(name = "name") String name) {
         Movie movie = service.getMovieByName(name);
-        return chooseFormat(movie, mediaType);
+        return ResponseEntity.ok(movie);
     }
 
     @RequestMapping(value = "/movie", params = "id")
-    public ResponseEntity<?> getMovieById(@RequestParam(name = "id") String id,
-                                          @RequestParam(name = "mediaType", defaultValue = "json") String mediaType) throws IOException, InvalidFormatException {
+    public ResponseEntity<?> getMovieById(@RequestParam(name = "id") String id) {
         Movie movie = service.getMovieById(id);
-        return chooseFormat(movie, mediaType);
+        return ResponseEntity.ok(movie);
     }
 
     @RequestMapping(value = "/movie", params = "listName")
-    public ResponseEntity<?> getMovieList(@RequestParam(name = "listName") List<String> listName,
-                                          @RequestParam(name = "mediaType", defaultValue = "json") String mediaType) throws Exception {
+    public ResponseEntity<?> getMovieList(@RequestParam(name = "listName") List<String> listName) throws ExecutionException, InterruptedException {
         List<Movie> movies = service.getMovieList(listName);
-        return chooseFormat(movies, mediaType);
+        return ResponseEntity.ok(movies);
     }
 
-    private ResponseEntity<?> chooseFormat(Object object, String mediaType) throws IOException, InvalidFormatException {
-        String type = MediaType.APPLICATION_JSON_VALUE;
-        if (mediaType.equals("doc")) {
-            File file;
-            if (object instanceof Movie) {
-                file = document.createMovieDoc((Movie) object);
-            } else {
-                file = document.createMovieDoc((List<Movie>) object);
-            }
-            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName())
-                    .contentLength(file.length())
-                    .body(resource);
-        }
-        if (mediaType.equals("xml")) {
-            type = MediaType.APPLICATION_XML_VALUE;
-        }
+    @RequestMapping(value = "/doc", params = "listName")
+    public ResponseEntity<?> getDoc(@RequestParam(name = "listName") List<String> listName) throws Exception {
+        List<Movie> movies = service.getMovieList(listName);
+        File file = document.createMovieDoc(movies);
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, type)
-                .body(object);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName())
+                .contentLength(file.length())
+                .body(resource);
     }
 }
