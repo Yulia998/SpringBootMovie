@@ -43,7 +43,7 @@ public class MovieController {
 
     @RequestMapping(value = "/movie", params = "listName")
     public ResponseEntity<?> getMovieList(@RequestParam(name = "listName") List<String> listName,
-                                          @RequestParam(name = "mediaType", defaultValue = "json") String mediaType) throws IOException, InvalidFormatException {
+                                          @RequestParam(name = "mediaType", defaultValue = "json") String mediaType) throws Exception {
         List<Movie> movies = service.getMovieList(listName);
         return chooseFormat(movies, mediaType);
     }

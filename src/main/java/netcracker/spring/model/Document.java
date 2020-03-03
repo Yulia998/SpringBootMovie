@@ -1,5 +1,6 @@
 package netcracker.spring.model;
 
+import org.apache.log4j.Logger;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.*;
@@ -16,6 +17,7 @@ import java.util.List;
 public class Document {
     private String templatePath;
     private String outputPath;
+    private static final Logger LOGGER = Logger.getLogger(Document.class);
 
     public Document(@Value("${docTemplatePath}") String templatePath,
                     @Value("${docCreatedPath}") String outputPath) {
@@ -28,37 +30,45 @@ public class Document {
     }
 
     public File createMovieDoc(Movie movie) throws IOException, InvalidFormatException {
-        XWPFDocument document = new XWPFDocument(new FileInputStream((templatePath)));
-        XWPFTable table = document.getTables().get(0);
-        fillTable(table, movie);
-        File file = new File(outputPath + movie.getTitle() + ".docx");
-        FileOutputStream out = new FileOutputStream(file);
-        document.write(out);
-        out.flush();
-        out.close();
-        return file;
+        try (XWPFDocument document = new XWPFDocument(new FileInputStream((templatePath)))) {
+            XWPFTable table = document.getTables().get(0);
+            fillTable(table, movie);
+            File file = new File(outputPath + movie.getTitle() + ".docx");
+            FileOutputStream out = new FileOutputStream(file);
+            document.write(out);
+            out.flush();
+            out.close();
+            return file;
+        } catch (IOException | InvalidFormatException e) {
+            LOGGER.error(e);
+            throw e;
+        }
     }
 
     public File createMovieDoc(List<Movie> movies) throws IOException, InvalidFormatException {
-        XWPFDocument document = new XWPFDocument(new FileInputStream((templatePath)));
-        List<XWPFParagraph> paragraphs = document.getParagraphs();
-        XWPFRun runTable;
-        XWPFTable mainTable = document.getTables().get(0);
-        for (int i = 1; i < movies.size(); i++) {
-            fillTable(mainTable, movies.get(i));
-            runTable = paragraphs.get(i - 1).createRun();
-            runTable.addBreak(BreakType.PAGE);
-            document.createTable();
-            document.setTable(i, mainTable);
-            document.createParagraph();
+        try (XWPFDocument document = new XWPFDocument(new FileInputStream((templatePath)))) {
+            List<XWPFParagraph> paragraphs = document.getParagraphs();
+            XWPFRun runTable;
+            XWPFTable mainTable = document.getTables().get(0);
+            for (int i = 1; i < movies.size(); i++) {
+                fillTable(mainTable, movies.get(i));
+                runTable = paragraphs.get(i - 1).createRun();
+                runTable.addBreak(BreakType.PAGE);
+                document.createTable();
+                document.setTable(i, mainTable);
+                document.createParagraph();
+            }
+            fillTable(mainTable, movies.get(0));
+            File file = new File(outputPath + "movies.docx");
+            FileOutputStream out = new FileOutputStream(file);
+            document.write(out);
+            out.flush();
+            out.close();
+            return file;
+        } catch (IOException | InvalidFormatException e) {
+            LOGGER.error(e);
+            throw e;
         }
-        fillTable(mainTable, movies.get(0));
-        File file = new File(outputPath + "movies.docx");
-        FileOutputStream out = new FileOutputStream(file);
-        document.write(out);
-        out.flush();
-        out.close();
-        return file;
     }
 
     private void fillTable(XWPFTable table, Movie movie) throws IOException, InvalidFormatException {

@@ -2,6 +2,7 @@ package netcracker.spring.service;
 
 import netcracker.spring.model.JsonParser;
 import netcracker.spring.model.Movie;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.concurrent.*;
 
 @Service
 public class MovieService implements SiteService {
+    private static final Logger LOGGER = Logger.getLogger(MovieService.class);
     private final String serviceUrl;
     private RestTemplate restTemplate = new RestTemplate();
     private int amountThread;
@@ -36,7 +38,7 @@ public class MovieService implements SiteService {
         return movie;
     }
 
-    public List<Movie> getMovieList(List<String> listName) {
+    public List<Movie> getMovieList(List<String> listName) throws InterruptedException, ExecutionException {
         ExecutorService executorService = Executors.newFixedThreadPool(amountThread);
         CompletionService<Movie> completionService = new ExecutorCompletionService<>(executorService);
         List<Movie> movies = new ArrayList<>();
@@ -44,10 +46,9 @@ public class MovieService implements SiteService {
             Future<Movie> submit = completionService.submit(() -> getMovieByName(movieName));
             try {
                 movies.add(submit.get());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
+            } catch (InterruptedException | ExecutionException e) {
+                LOGGER.error(e);
+                throw e;
             }
         }
         return movies;

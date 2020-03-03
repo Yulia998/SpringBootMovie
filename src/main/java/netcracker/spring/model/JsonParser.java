@@ -9,9 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.log4j.Logger;
+
 public class JsonParser {
+    private static final Logger LOGGER = Logger.getLogger(JsonParser.class);
+
     public static Movie jsonParser(String json) {
         JSONObject jsonObject = new JSONObject(json);
+        if (jsonObject.has("Error")) {
+            String error = jsonObject.getString("Error");
+            LOGGER.warn(error);
+            throw new IllegalArgumentException(error);
+        }
         String title = jsonObject.getString("Title");
         int year = Integer.parseInt(jsonObject.getString("Year").substring(0, 4));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.US);
