@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,25 +16,26 @@ import java.util.concurrent.*;
 @Service
 public class MovieService implements SiteService {
     private static final Logger LOGGER = Logger.getLogger(MovieService.class);
-    private final String serviceUrl;
+    private final UriComponentsBuilder serviceUrl;
     private RestTemplate restTemplate = new RestTemplate();
     private int amountThread;
 
     public MovieService(@Value("${apiKey}") String key, @Value("${amountStream}") int amountThread) {
-        this.serviceUrl = "http://www.omdbapi.com/?apikey=" + key + "&";
+        this.serviceUrl = UriComponentsBuilder.fromHttpUrl("http://www.omdbapi.com/")
+                .queryParam("apikey", key);
         this.amountThread = amountThread;
     }
 
     public Movie getMovieByName(String name) {
-        String url = serviceUrl + "t=" + name;
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        String urlStr = serviceUrl.cloneBuilder().queryParam("t", name).build().toString();
+        ResponseEntity<String> response = restTemplate.getForEntity(urlStr, String.class);
         Movie movie = JsonParser.jsonParser(response.getBody());
         return movie;
     }
 
     public Movie getMovieById(String id) {
-        String url = serviceUrl + "i=" + id;
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        String urlStr = serviceUrl.cloneBuilder().queryParam("i", id).build().toString();
+        ResponseEntity<String> response = restTemplate.getForEntity(urlStr, String.class);
         Movie movie = JsonParser.jsonParser(response.getBody());
         return movie;
     }
