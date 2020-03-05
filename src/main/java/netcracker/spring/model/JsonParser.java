@@ -39,4 +39,19 @@ public class JsonParser {
         }
         return new Movie(title, year, released, runtime, genre, director, actors, plot, country, poster, type, ratingsList);
     }
+
+    public static List<String> jsonListParser(List<String> jsonList, int amount) {
+        List<String> id = new ArrayList<>();
+        for (String json : jsonList) {
+            JSONObject jsonObject = new JSONObject(json);
+            JSONArray movies = jsonObject.getJSONArray("Search");
+            for (int i = 0; i < movies.length(); i++) {
+                if (id.size() >= amount) {
+                    break;
+                }
+                id.add(movies.getJSONObject(i).getString("imdbID"));
+            }
+        }
+        return id;
+    }
 }

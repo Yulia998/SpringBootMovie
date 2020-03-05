@@ -3,6 +3,7 @@ package netcracker.spring.service;
 import netcracker.spring.model.JsonParser;
 import netcracker.spring.model.Movie;
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -40,12 +41,36 @@ public class MovieService implements SiteService {
         return movie;
     }
 
-    public List<Movie> getMovieList(List<String> listName) throws InterruptedException, ExecutionException {
+    public List<Movie> getMovieListBySearch(String name, int amount) throws ExecutionException, InterruptedException {
+        ResponseEntity<String> response;
+        int i = 0;
+        List<String> responseList = new ArrayList<>();
+        while (true) {
+            String urlStr = serviceUrl.cloneBuilder().queryParam("s", name)
+                    .queryParam("page", ++i).build().toString();
+            response = restTemplate.getForEntity(urlStr, String.class);
+            JSONObject jsonObject = new JSONObject(response.getBody());
+            if (jsonObject.has("Error") || responseList.size() >= amount / 10.0) {
+                break;
+            } else {
+                responseList.add(response.getBody());
+            }
+        }
+        List<String> listId = JsonParser.jsonListParser(responseList, amount);
+        return findMovies(listId, "id");
+    }
+
+    public List<Movie> findMovies(List<String> nameId, String type) throws ExecutionException, InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(amountThread);
         CompletionService<Movie> completionService = new ExecutorCompletionService<>(executorService);
         List<Movie> movies = new ArrayList<>();
-        for (String movieName : listName) {
-            Future<Movie> submit = completionService.submit(() -> getMovieByName(movieName));
+        Future<Movie> submit;
+        for (String movie : nameId) {
+            if (type.equals("name")) {
+                submit = completionService.submit(() -> getMovieByName(movie));
+            } else {
+                submit = completionService.submit(() -> getMovieById(movie));
+            }
             try {
                 movies.add(submit.get());
             } catch (InterruptedException | ExecutionException e) {

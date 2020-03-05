@@ -39,13 +39,20 @@ public class MovieController {
 
     @RequestMapping(value = "/movie", params = "listName")
     public ResponseEntity<?> getMovieList(@RequestParam(name = "listName") List<String> listName) throws ExecutionException, InterruptedException {
-        List<Movie> movies = service.getMovieList(listName);
+        List<Movie> movies = service.findMovies(listName, "name");
+        return ResponseEntity.ok(movies);
+    }
+
+    @RequestMapping(value = "/movie", params = "search")
+    public ResponseEntity<?> getMovieBySearch(@RequestParam(name = "search") String search,
+                                              @RequestParam(name = "amount", defaultValue = "10") int amount) throws ExecutionException, InterruptedException {
+        List<Movie> movies = service.getMovieListBySearch(search, amount);
         return ResponseEntity.ok(movies);
     }
 
     @RequestMapping(value = "/doc", params = "listName")
     public ResponseEntity<?> getDoc(@RequestParam(name = "listName") List<String> listName) throws Exception {
-        List<Movie> movies = service.getMovieList(listName);
+        List<Movie> movies = service.findMovies(listName, "name");
         File file = document.createMovieDoc(movies);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
         return ResponseEntity.ok()

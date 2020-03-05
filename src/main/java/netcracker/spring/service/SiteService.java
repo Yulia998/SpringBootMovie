@@ -10,5 +10,7 @@ public interface SiteService {
 
     Movie getMovieById(String id);
 
-    List<Movie> getMovieList(List<String> listName) throws InterruptedException, ExecutionException;
+    List<Movie> findMovies(List<String> nameId, String type) throws InterruptedException, ExecutionException;
+
+    List<Movie> getMovieListBySearch(String name, int amount) throws ExecutionException, InterruptedException;
 }
