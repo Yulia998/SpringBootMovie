@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -53,11 +52,10 @@ public class MovieController {
     @RequestMapping(value = "/doc", params = "listName")
     public ResponseEntity<?> getDoc(@RequestParam(name = "listName") List<String> listName) throws Exception {
         List<Movie> movies = service.findMovies(listName, "name");
-        File file = document.createMovieDoc(movies);
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+        byte[] byteArray = document.createMovieDoc(movies);
+        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(byteArray));
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName())
-                .contentLength(file.length())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=movies.docx")
                 .body(resource);
     }
 }

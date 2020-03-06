@@ -74,7 +74,7 @@ public class MovieService implements SiteService {
             try {
                 movies.add(submit.get());
             } catch (InterruptedException | ExecutionException e) {
-                LOGGER.error(e);
+                LOGGER.error("Ошибка при получении результатов асинхронного запроса", e);
                 throw e;
             }
         }

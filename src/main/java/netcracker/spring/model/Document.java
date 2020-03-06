@@ -16,20 +16,13 @@ import java.util.List;
 @Component
 public class Document {
     private String templatePath;
-    private String outputPath;
     private static final Logger LOGGER = Logger.getLogger(Document.class);
 
-    public Document(@Value("${docTemplatePath}") String templatePath,
-                    @Value("${docCreatedPath}") String outputPath) {
+    public Document(@Value("${docTemplatePath}") String templatePath) {
         this.templatePath = templatePath;
-        File folder = new File(outputPath.substring(0, outputPath.length() - 1));
-        if (!folder.exists()) {
-            folder.mkdir();
-        }
-        this.outputPath = outputPath;
     }
 
-    public File createMovieDoc(List<Movie> movies) throws IOException, InvalidFormatException {
+    public byte[] createMovieDoc(List<Movie> movies) throws IOException, InvalidFormatException {
         try (XWPFDocument document = new XWPFDocument(new FileInputStream((templatePath)))) {
             List<XWPFParagraph> paragraphs = document.getParagraphs();
             XWPFRun runTable;
@@ -43,14 +36,11 @@ public class Document {
                 document.createParagraph();
             }
             fillTable(mainTable, movies.get(0));
-            File file = new File(outputPath + "movies.docx");
-            FileOutputStream out = new FileOutputStream(file);
-            document.write(out);
-            out.flush();
-            out.close();
-            return file;
+            ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+            document.write(byteArray);
+            return byteArray.toByteArray();
         } catch (IOException | InvalidFormatException e) {
-            LOGGER.error(e);
+            LOGGER.error("Ошибка при считывании/записи данных", e);
             throw e;
         }
     }
@@ -65,18 +55,22 @@ public class Document {
                     .addPicture(inputStream, XWPFDocument.PICTURE_TYPE_JPEG, "",
                             Units.toEMU(180), Units.toEMU(230));
         }
-        table.getRow(0).getCell(1).getParagraphs().get(0).getRuns().get(0).setText(movie.getTitle(), 0);
-        table.getRow(1).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(String.valueOf(movie.getYear()), 0);
-        table.getRow(2).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getCountry(), 0);
-        table.getRow(3).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getDirector(), 0);
-        table.getRow(4).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getActors(), 0);
-        table.getRow(5).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getGenre(), 0);
-        table.getRow(6).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getType(), 0);
-        table.getRow(7).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getReleased().toString(), 0);
-        table.getRow(8).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getRuntime(), 0);
+        changeTable(table, 0, 1, movie.getTitle());
+        changeTable(table, 1, 2, String.valueOf(movie.getYear()));
+        changeTable(table, 2, 2, movie.getCountry());
+        changeTable(table, 3, 2, movie.getDirector());
+        changeTable(table, 4, 2, movie.getActors());
+        changeTable(table, 5, 2, movie.getGenre());
+        changeTable(table, 6, 2, movie.getType());
+        changeTable(table, 7, 2, movie.getReleased());
+        changeTable(table, 8, 2, movie.getRuntime());
         String ratings = movie.getRatings().toString();
         String ratingsOut = ratings.substring(1, ratings.length() - 1);
-        table.getRow(9).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(ratingsOut, 0);
-        table.getRow(10).getCell(2).getParagraphs().get(0).getRuns().get(0).setText(movie.getPlot(), 0);
+        changeTable(table, 9, 2, ratingsOut);
+        changeTable(table, 10, 2, movie.getPlot());
+    }
+
+    private void changeTable(XWPFTable table, int row, int cell, String text) {
+        table.getRow(row).getCell(cell).getParagraphs().get(0).getRuns().get(0).setText(text, 0);
     }
 }
